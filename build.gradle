@@ -1,0 +1,62 @@
+plugins {
+    id 'java'
+    id 'maven-publish'
+    id 'com.github.johnrengelman.shadow' version '8.1.1'
+}
+
+sourceCompatibility = 1.11
+targetCompatibility = 1.11
+
+group 'com.socraticphoenix.mc.bukkitbuzz'
+version '0.0.0'
+
+repositories {
+    mavenCentral()
+    maven { url = 'https://jitpack.io' }
+    maven { url = 'https://hub.spigotmc.org/nexus/content/repositories/public/' }
+}
+
+dependencies {
+    compileOnly("org.spigotmc:spigot-api:1.20.1-R0.1-SNAPSHOT")
+
+    testImplementation("org.junit.jupiter:junit-jupiter:5.9.2")
+}
+
+
+task ghpagesJavadocs(type: Javadoc) {
+    destinationDir = file("/docs")
+
+    source = sourceSets.main.allJava
+    classpath = configurations.runtimeClasspath
+}
+
+task javadocJar(type: Jar) {
+    from javadoc
+    archiveClassifier.set("javadoc")
+}
+
+task sourceJar(type: Jar) {
+    from sourceSets.main.allSource
+    archiveClassifier.set("source")
+}
+
+artifacts {
+    archives javadocJar, sourceJar, shadowJar
+}
+
+publishing {
+    publications {
+        mavenJava(MavenPublication) {
+            artifactId = rootProject.name
+
+            from components.java
+
+            artifact sourceJar
+            artifact javadocJar
+        }
+    }
+}
+
+test {
+    useJUnitPlatform()
+}

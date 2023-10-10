@@ -1,0 +1,36 @@
+name: BukkitBuzzIn
+main: com.socraticphoenix.mc.bukkitbuzz.BukkitBuzzPlugin
+version: 0.0.0
+commands:
+  game:
+    description: Game command.
+    usage: /game <create <name> [teams...] | remove <name> | teams <name> | list>
+    permission: bukkitbuzz.admin
+    permission-message: You don't have permission to use this command.
+  team:
+    description: Team command.
+    usage: /team <join <name> | set <Player> <name> | create <name> <color> | remove <name> | list>
+    permission: bukkitbuzz.player
+    permission-message: You don't have permission to use this command.
+  buzz:
+    description: Buzz command.
+    usage: /buzz <<start |stop | on | off | buzzed> [game-name] | block <create | remove | test | list> | in | countdown [game-name] <seconds> [display]>
+    permission: bukkitbuzz.player
+    permission-message: You don't have permission to use this command.
+
+permissions:
+  bukkitbuzz.*:
+    description: Gives access to all commands.
+    children:
+      bukkitbuzz.player: true
+      bukkitbuzz.player.join: true
+      bukkitbuzz.admin: true
+  bukkitbuzz.player:
+    description: Allows a player to run buzz in commands and view teams/games
+    default: true
+  bukkitbuzz.player.team:
+    description: Allows a player to join a team via a command
+    default: true
+  bukkitbuzz.admin:
+    description: Allows a player to create games and teams, and to run them
+    default: op
