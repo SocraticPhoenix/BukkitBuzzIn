@@ -123,7 +123,7 @@ public class BuzzCommandExecutor extends AbstractPluginService implements Comman
                     GameManager.Game finalTargetGame = targetGame;
                     if (sender.hasPermission("bukkitbuzz.admin")) {
                         if (subCommand.equals("on")) {
-                            targetGame.buzzState().setLastBuzz(null);
+                            targetGame.buzzState().buzzIns().clear();
                             targetGame.buzzState().setBuzzOn(true);
                             sender.sendMessage("Enabled buzzing in at anytime for game " + targetGame.name());
                             this.plugin.gameManager().forEachPlayer(targetGame, player -> player.sendMessage(ChatColor.GREEN + "Buzzing in at any time is enabled for game " + finalTargetGame.name()));
@@ -134,7 +134,7 @@ public class BuzzCommandExecutor extends AbstractPluginService implements Comman
                             this.plugin.gameManager().forEachPlayer(targetGame, player -> player.sendMessage(ChatColor.RED + "Buzzing in at any time is disabled for game " + finalTargetGame.name()));
                             return true;
                         } else if (subCommand.equals("start")) {
-                            targetGame.buzzState().setLastBuzz(null);
+                            targetGame.buzzState().buzzIns().clear();
                             targetGame.buzzState().setBuzzStarted(true);
                             targetGame.buzzState().setHasCountdown(false);
                             sender.sendMessage("Buzzing in started for game " + targetGame.name());
@@ -147,8 +147,8 @@ public class BuzzCommandExecutor extends AbstractPluginService implements Comman
                             return true;
                         } else if (subCommand.equals("countdown")) {
                             if ((args.length >= 2 && !exactGame) || args.length >= 3) {
-                                targetGame.buzzState().setLastBuzz(null);
-                                targetGame.buzzState().setBuzzStarted(true);
+                                targetGame.buzzState().buzzIns().clear();
+                                if (!targetGame.buzzState().buzzOn()) targetGame.buzzState().setBuzzStarted(true);
                                 targetGame.buzzState().setHasCountdown(true);
 
                                 String secondsStr = exactGame ? args[2] : args[1];
@@ -187,19 +187,12 @@ public class BuzzCommandExecutor extends AbstractPluginService implements Comman
                                 return true;
                             }
                         } else if (subCommand.equals("reset")) {
-                            targetGame.buzzState().setLastBuzz(null);
+                            targetGame.buzzState().buzzIns().clear();
                             sender.sendMessage("Reset buzzing for game " + targetGame.name());
                             return true;
                         } else if (subCommand.equals("display")) {
-                            UUID buzzedIn = targetGame.buzzState().lastBuzz();
-                            if (buzzedIn != null) {
-                                Player player = this.plugin.getServer().getPlayer(buzzedIn);
-                                String message;
-                                if (player != null) {
-                                    message = player.getName() + " on team " + this.plugin.teamManager().getPlayerTeam(buzzedIn).chatName() + ChatColor.WHITE + " buzzed in last!";
-                                } else {
-                                    message = "Team " + this.plugin.teamManager().getPlayerTeam(buzzedIn).chatName() + ChatColor.WHITE + " buzzed in last!";
-                                }
+                            if (!targetGame.buzzState().buzzIns().isEmpty()) {
+                                String message = this.plugin.buildLastBuzzedMessage(targetGame.buzzState()) + " buzzed in already.";
                                 this.plugin.gameManager().forEachPlayer(targetGame, p -> p.sendMessage(message));
                             } else {
                                 sender.sendMessage("No last buzzed in team recorded for " + targetGame.name());
@@ -210,15 +203,8 @@ public class BuzzCommandExecutor extends AbstractPluginService implements Comman
 
                     if (sender.hasPermission("bukkitbuzz.player")) {
                         if (subCommand.equals("buzzed")) {
-                            UUID buzzedIn = targetGame.buzzState().lastBuzz();
-                            if (buzzedIn != null) {
-                                Player player = this.plugin.getServer().getPlayer(buzzedIn);
-                                String message;
-                                if (player != null) {
-                                    message = player.getName() + " on team " + this.plugin.teamManager().getPlayerTeam(buzzedIn).chatName() + ChatColor.WHITE + " buzzed in last!";
-                                } else {
-                                    message = "Team " + this.plugin.teamManager().getPlayerTeam(buzzedIn).chatName() + ChatColor.WHITE + " buzzed in last!";
-                                }
+                            if (!targetGame.buzzState().buzzIns().isEmpty()) {
+                                String message = this.plugin.buildLastBuzzedMessage(targetGame.buzzState()) + " buzzed in already.";
                                 sender.sendMessage(message);
                             } else {
                                 sender.sendMessage("No last buzzed in team recorded for " + targetGame.name());

@@ -7,12 +7,7 @@ import com.socraticphoenix.mc.bukkitbuzz.AbstractPluginService;
 import com.socraticphoenix.mc.bukkitbuzz.BukkitBuzzPlugin;
 import org.bukkit.entity.Player;
 
-import java.util.Collection;
-import java.util.LinkedHashMap;
-import java.util.LinkedHashSet;
-import java.util.Map;
-import java.util.Set;
-import java.util.UUID;
+import java.util.*;
 import java.util.function.Consumer;
 
 public class GameManager extends AbstractPluginService {
@@ -35,7 +30,11 @@ public class GameManager extends AbstractPluginService {
 
             JsonObject buzzStateObj = new JsonObject();
             BuzzState buzzState = game.buzzState();
-            buzzStateObj.addProperty("lastBuzz", String.valueOf(buzzState.lastBuzz));
+
+            JsonArray buzzIns = new JsonArray();
+            buzzState.buzzIns.forEach(u -> buzzIns.add(u.toString()));
+            buzzStateObj.add("buzzIns", buzzIns);
+
             buzzStateObj.addProperty("buzzOn", buzzState.buzzOn());
             buzzStateObj.addProperty("buzzStarted", buzzState.buzzStarted());
             buzzStateObj.addProperty("hasCountdown", buzzState.hasCountdown());
@@ -64,11 +63,13 @@ public class GameManager extends AbstractPluginService {
                     JsonObject buzzStateObj = gameObj.getAsJsonObject("buzzState");
                     BuzzState buzzState = new BuzzState(buzzStateObj.get("buzzOn").getAsBoolean(), buzzStateObj.get("buzzStarted").getAsBoolean(),
                             buzzStateObj.get("hasCountdown").getAsBoolean(), buzzStateObj.get("startTimestamp").getAsLong(), buzzStateObj.get("countdownSeconds").getAsInt());
-                    if (buzzStateObj.has("lastBuzz") && !buzzStateObj.get("lastBuzz").isJsonNull()) {
-                        String str = buzzStateObj.get("lastBuzz").getAsString();
-                        if (str != null && !str.equals("null")) {
-                            buzzState.setLastBuzz(UUID.fromString(str));
-                        }
+
+                    JsonElement buzzInsElem = buzzStateObj.get("buzzIns");
+                    if (buzzInsElem instanceof JsonArray) {
+                        ((JsonArray) buzzInsElem).forEach(elem -> {
+                            String uuid = elem.getAsString();
+                            buzzState.buzzIns().add(UUID.fromString(uuid));
+                        });
                     }
 
                     Game game = new Game(gameObj.get("name").getAsString(), UUID.fromString(gameObj.get("gameMaster").getAsString()), buzzState, new LinkedHashSet<>());
@@ -142,7 +143,7 @@ public class GameManager extends AbstractPluginService {
     }
 
     public static class BuzzState {
-        private UUID lastBuzz;
+        private List<UUID> buzzIns = new ArrayList<>();
 
         private boolean buzzOn;
         private boolean buzzStarted;
@@ -159,13 +160,12 @@ public class GameManager extends AbstractPluginService {
             this.countdownSeconds = countdownSeconds;
         }
 
-        public UUID lastBuzz() {
-            return this.lastBuzz;
+        public List<UUID> buzzIns() {
+            return buzzIns;
         }
 
-        public BuzzState setLastBuzz(UUID lastBuzz) {
-            this.lastBuzz = lastBuzz;
-            return this;
+        public void setBuzzIns(List<UUID> buzzIns) {
+            this.buzzIns = buzzIns;
         }
 
         public boolean buzzOn() {

@@ -20,6 +20,7 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.util.UUID;
 import java.util.concurrent.TimeUnit;
+import java.util.stream.Collectors;
 
 public class BukkitBuzzPlugin extends JavaPlugin {
     public static final UUID CONSOLE_UUID = new UUID(0, 0);
@@ -101,38 +102,70 @@ public class BukkitBuzzPlugin extends JavaPlugin {
         return this.buzzBlockManager;
     }
 
+    public String buildLastBuzzedMessage(GameManager.BuzzState state) {
+        if (state.buzzIns().isEmpty()) {
+            return "No one has buzzed in yet.";
+        } else if (state.buzzIns().size() == 1) {
+            return tryGetFrom(state.buzzIns().get(0));
+        } else {
+            StringBuilder sb = new StringBuilder();
+            sb.append("(First) ");
+            for (int i = 0; i < state.buzzIns().size(); i++) {
+                if (i == state.buzzIns().size() - 1) {
+                    sb.append("(Last) ");
+                }
+                sb.append(this.tryGetFrom(state.buzzIns().get(i)));
+                if (i < state.buzzIns().size() - 1) {
+                    sb.append(", ");
+                }
+            }
+            return sb.toString();
+        }
+    }
+
+    private String tryGetFrom(UUID id) {
+        Player buzzedPlayer = this.getServer().getPlayer(id);
+        TeamManager.Team team = this.teamManager().getPlayerTeam(id);
+
+        if (buzzedPlayer != null && team != null) {
+            return buzzedPlayer.getName() + " on team " + team.chatName() + ChatColor.WHITE;
+        } else if (buzzedPlayer != null) {
+            return buzzedPlayer.getName();
+        } else if (team != null) {
+            return "Team " + team.chatName() + ChatColor.WHITE;
+        } else {
+            return "Offline player with no team (buzz-ins may need to be reset)";
+        }
+    }
+
     public synchronized void registerBuzz(Player player) {
         long timestamp = System.currentTimeMillis();
 
         GameManager.Game game = this.gameManager.getPlayerGame(player.getUniqueId());
         if (game != null) {
             GameManager.BuzzState state = game.buzzState();
-            if (state.lastBuzz() != null) {
-                UUID buzzedIn = state.lastBuzz();
-                Player buzzedPlayer = this.getServer().getPlayer(buzzedIn);
-                String message;
-                if (buzzedPlayer != null) {
-                    message = buzzedPlayer.getName() + " on team " + this.teamManager().getPlayerTeam(buzzedIn).chatName() + ChatColor.WHITE + " already buzzed in!";
-                } else {
-                    message = "Team " + this.teamManager().getPlayerTeam(buzzedIn).chatName() + ChatColor.WHITE + " already buzzed in!";
+            if (state.hasCountdown()) {
+                long dif = timestamp - state.startTimestamp();
+                if (dif < TimeUnit.SECONDS.toMillis(state.countdownSeconds())) {
+                    player.sendMessage("Countdown to buzz-in is not complete!");
+                    return;
                 }
-                player.sendMessage(message);
-                return;
             }
 
             if (state.buzzOn()) {
-                this.buzz(player, game, state);
-            } else if (state.buzzStarted()) {
-                if (state.hasCountdown()) {
-                    long dif = timestamp - state.startTimestamp();
-                    if (dif >= TimeUnit.SECONDS.toMillis(state.countdownSeconds())) {
+                if (!state.buzzIns().contains(player.getUniqueId())) {
+                    if (this.teamManager.getPlayerTeam(player.getUniqueId()).players().stream().noneMatch(teamMate -> state.buzzIns().contains(teamMate))) {
                         buzz(player, game, state);
                     } else {
-                        player.sendMessage("Countdown to buzz-in is not complete!");
+                        player.sendMessage("Your team has already buzzed in!");
                     }
                 } else {
-                    buzz(player, game, state);
+                    player.sendMessage("You have already buzzed in!");
                 }
+            } else if (!state.buzzIns().isEmpty()) {
+                player.sendMessage(buildLastBuzzedMessage(state) + " already buzzed in!");
+            } else if (state.buzzStarted()) {
+                buzz(player, game, state);
             } else {
                 player.sendMessage("Buzzing in is not open!");
             }
@@ -143,7 +176,7 @@ public class BukkitBuzzPlugin extends JavaPlugin {
 
     private void buzz(Player player, GameManager.Game game, GameManager.BuzzState state) {
         state.setBuzzStarted(false);
-        state.setLastBuzz(player.getUniqueId());
+        state.buzzIns().add(player.getUniqueId());
 
         String message = player.getName() + " on team " + this.teamManager().getPlayerTeam(player.getUniqueId()).chatName() + ChatColor.WHITE + " buzzed in!";
         this.gameManager().forEachPlayer(game, p -> {
