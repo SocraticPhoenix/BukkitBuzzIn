@@ -41,7 +41,7 @@ task sourceJar(type: Jar) {
 }
 
 artifacts {
-    archives javadocJar, sourceJar, shadowJar
+    archives javadocJar, sourceJar
 }
 
 publishing {
