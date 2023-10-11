@@ -260,11 +260,11 @@ public class BuzzCommandExecutor extends AbstractPluginService implements Comman
                 long seconds = TimeUnit.MILLISECONDS.toSeconds(millis);
 
                 if (millis <= 0) {
-                    plugin.gameManager().forEachPlayer(game, p -> p.sendMessage(ChatColor.GREEN + "Buzzing in " + ChatColor.GOLD + "is open!"));
+                    plugin.gameManager().forEachPlayer(game, p -> plugin.sendTitleMessage(p, ChatColor.AQUA + "GO", ChatColor.GREEN + "Buzzing in " + ChatColor.GOLD + "is open!"));
                     this.cancel();
                 } else if (seconds != lastCountdown) {
                     lastCountdown = seconds;
-                    plugin.gameManager().forEachPlayer(game, p -> p.sendMessage(ChatColor.GREEN + "Buzzing in opens in " + (seconds + 1) + "..."));
+                    plugin.gameManager().forEachPlayer(game, p -> plugin.sendTitleMessage(p, ChatColor.GREEN + "Buzzing in opens in", ChatColor.RED + String.valueOf((seconds + 1))));
                 }
 
             }

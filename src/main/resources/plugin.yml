@@ -9,7 +9,7 @@ commands:
     permission-message: You don't have permission to use this command.
   team:
     description: Team command.
-    usage: /team <join <name> | set <Player> <name> | create <name> <color> | remove <name> | list>
+    usage: /team <join <name> | set <Player> <name> | create <name> <color> | remove <name> | players <name> | list>
     permission: bukkitbuzz.player
     permission-message: You don't have permission to use this command.
   buzz:

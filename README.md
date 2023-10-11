@@ -29,9 +29,10 @@ Teams are collections of players with a team name. Players can only be in one te
 
 
 #### Listing Teams
-| Command               | Permission        | Purpose          |
-|-----------------------|-------------------|------------------|
-| `/team list`          | bukkitbuzz.player | Lists all teams. |
+| Command                | Permission        | Purpose                             |
+|------------------------|-------------------|-------------------------------------|
+| `/team list`           | bukkitbuzz.player | Lists all teams.                    |
+| `/team players <name>` | bukkitbuzz.player | Lists all players on the given team |
 
 ### Games
 Games are collections of teams with a game name. Teams can only be in one game at a time.

@@ -100,6 +100,11 @@ public class TeamManager extends AbstractPluginService {
         });
         team.players().add(player);
         this.playerTeams.put(player, team);
+
+        GameManager.Game game = this.plugin.gameManager().getGame(team);
+        if (game != null) {
+            this.plugin.gameManager().addTeam(game, team);
+        }
     }
 
     public void removeFromTeam(UUID player) {

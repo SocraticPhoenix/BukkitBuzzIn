@@ -10,7 +10,10 @@ import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 
 import java.util.Arrays;
+import java.util.List;
+import java.util.Objects;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 public class TeamCommandExecutor extends AbstractPluginService implements CommandExecutor {
 
@@ -54,6 +57,23 @@ public class TeamCommandExecutor extends AbstractPluginService implements Comman
                     sender.sendMessage("You do not have permission to use that command");
                 }
                 return true;
+            } else if (subCommand.equals("players")) {
+                if (args.length == 2) {
+                    if (sender.hasPermission("bukkitbuzz.player")) {
+                        String teamName = args[1];
+                        TeamManager.Team team = this.plugin.teamManager().getTeam(teamName);
+                        if (team == null) {
+                            sender.sendMessage("Team " + teamName + " does not exist.");
+                        } else {
+                            List<String> playerNames = team.players().stream().map(u -> this.plugin.getServer().getPlayer(u)).filter(Objects::nonNull).map(Player::getName).collect(Collectors.toList());
+                            sender.sendMessage(playerNames.isEmpty() ? "No online players for team " + team.chatName() :
+                                    "Online players on " + team.chatName() + ChatColor.WHITE + " are: " + String.join(", ", playerNames));
+                        }
+                    } else {
+                        sender.sendMessage("You do not have permission to use that command");
+                    }
+                    return true;
+                }
             } else if (sender.hasPermission("bukkitbuzz.admin")) {
                 if (subCommand.equals("set")) {
                     if (args.length == 3) {

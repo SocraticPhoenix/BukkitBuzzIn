@@ -110,6 +110,14 @@ public class BukkitBuzzPlugin extends JavaPlugin {
         }
     }
 
+    public void sendTitleMessage(CommandSender sender, String text, String subtitle) {
+        if (sender instanceof Player) {
+            ((Player) sender).sendTitle(text, subtitle, 0, 20, 20);
+        } else {
+            sender.sendMessage(text);
+        }
+    }
+
     public String buildLastBuzzedMessage(GameManager.BuzzState state) {
         if (state.buzzIns().isEmpty()) {
             return "No one has buzzed in yet.";
@@ -158,7 +166,8 @@ public class BukkitBuzzPlugin extends JavaPlugin {
             if(state.hasCooldown()) {
                 long dif = timestamp - team.buzzTimestamp();
                 if (dif < state.cooldownMillis()) {
-                    player.sendMessage("Your team's buzz-in is cooling down! " + TimeUnit.MILLISECONDS.toSeconds(dif) + " second(s) left!");
+                    player.sendMessage(ChatColor.RED + "Your team's buzz-in is cooling down! " + ChatColor.GREEN +
+                            (TimeUnit.MILLISECONDS.toSeconds(state.cooldownMillis() - dif) + 1) + ChatColor.RED + " second(s) left!");
                     return;
                 } else {
                     team.setBuzzTimestamp(timestamp);
@@ -168,7 +177,7 @@ public class BukkitBuzzPlugin extends JavaPlugin {
             if (state.hasCountdown()) {
                 long dif = timestamp - state.startTimestamp();
                 if (dif < TimeUnit.SECONDS.toMillis(state.countdownSeconds())) {
-                    player.sendMessage("Countdown to buzz-in is not complete!");
+                    player.sendMessage(ChatColor.RED + "Countdown to buzz-in is not complete!");
                     return;
                 }
             }
@@ -176,35 +185,36 @@ public class BukkitBuzzPlugin extends JavaPlugin {
             if (state.buzzOn()) {
                 if (!state.buzzIns().contains(player.getUniqueId())) {
                     if (team.players().stream().noneMatch(teamMate -> state.buzzIns().contains(teamMate))) {
-                        buzz(player, game, state);
+                        buzz(player, game, team, state);
                     } else {
-                        player.sendMessage("Your team has already buzzed in!");
+                        player.sendMessage(ChatColor.RED + "Your team has already buzzed in!");
                     }
                 } else {
-                    player.sendMessage("You have already buzzed in!");
+                    player.sendMessage(ChatColor.RED + "You have already buzzed in!");
                 }
             } else if (!state.buzzIns().isEmpty()) {
-                player.sendMessage(buildLastBuzzedMessage(state) + " already buzzed in!");
+                player.sendMessage(ChatColor.RED + buildLastBuzzedMessage(state) + " already buzzed in!");
             } else if (state.buzzStarted()) {
-                buzz(player, game, state);
+                buzz(player, game, team, state);
             } else {
-                player.sendMessage("Buzzing in is not open!");
+                player.sendMessage(ChatColor.RED + "Buzzing in is not open!");
             }
         } else {
-            player.sendMessage(game == null ? "You are not in a game." : "You are not on a team.");
+            player.sendMessage(ChatColor.RED + (game == null ? "You are not in a game." : "You are not on a team."));
         }
     }
 
-    private void buzz(Player player, GameManager.Game game, GameManager.BuzzState state) {
+    private void buzz(Player player, GameManager.Game game, TeamManager.Team team, GameManager.BuzzState state) {
         state.setBuzzStarted(false);
         state.buzzIns().add(player.getUniqueId());
 
-        String message = player.getName() + " on team " + this.teamManager().getPlayerTeam(player.getUniqueId()).chatName() + ChatColor.WHITE + " buzzed in!";
-        this.gameManager().forEachPlayerExcept(game, game.gameMaster(), p -> p.sendMessage(message));
+        String message = team.color() + player.getName();
+        String subTitle = ChatColor.WHITE + "on team " + team.chatName() + ChatColor.WHITE + " buzzed in!";
+        this.gameManager().forEachPlayerExcept(game, game.gameMaster(), p -> this.sendTitleMessage(p, message, subTitle));
 
         Player gameMaster = this.getServer().getPlayer(game.gameMaster());
         if (gameMaster != null) {
-            gameMaster.sendMessage(message);
+            this.sendTitleMessage(gameMaster, message, subTitle);
         }
     }
 }
