@@ -31,6 +31,7 @@ public class TeamManager extends AbstractPluginService {
 
             teamObj.addProperty("name", name);
             teamObj.addProperty("color", team.color().name());
+            teamObj.addProperty("buzzTimestamp", team.buzzTimestamp());
 
             team.players().forEach(uuid -> players.add(uuid.toString()));
             teamObj.add("players", players);
@@ -48,7 +49,8 @@ public class TeamManager extends AbstractPluginService {
             if (e.getValue() instanceof JsonObject) {
                 JsonObject teamObj = (JsonObject) e.getValue();
                 if (teamObj.has("name") && teamObj.has("color") && teamObj.has("players")) {
-                    Team team = new Team(teamObj.get("name").getAsString(), ChatColor.valueOf(teamObj.get("color").getAsString()), new LinkedHashSet<>());
+                    Team team = new Team(teamObj.get("name").getAsString(), ChatColor.valueOf(teamObj.get("color").getAsString()), new LinkedHashSet<>(),
+                            teamObj.get("buzzTimestamp").getAsLong());
                     JsonElement playersElem = teamObj.get("players");
                     if (playersElem instanceof JsonArray) {
                         ((JsonArray) playersElem).forEach(elem -> {
@@ -77,7 +79,7 @@ public class TeamManager extends AbstractPluginService {
 
     public boolean createTeam(String name, ChatColor color) {
         if (this.teams.containsKey(name)) return false;
-        this.teams.put(name, new Team(name, color, new LinkedHashSet<>()));
+        this.teams.put(name, new Team(name, color, new LinkedHashSet<>(), 0));
         return true;
     }
 
@@ -109,11 +111,22 @@ public class TeamManager extends AbstractPluginService {
         private String name;
         private ChatColor color;
         private Set<UUID> players;
+        private long buzzTimestamp;
 
-        public Team(String name, ChatColor color, Set<UUID> players) {
+        public Team(String name, ChatColor color, Set<UUID> players, long buzzTimestamp) {
             this.name = name;
             this.color = color;
             this.players = players;
+            this.buzzTimestamp = buzzTimestamp;
+        }
+
+        public long buzzTimestamp() {
+            return this.buzzTimestamp;
+        }
+
+        public Team setBuzzTimestamp(long buzzTimestamp) {
+            this.buzzTimestamp = buzzTimestamp;
+            return this;
         }
 
         public String chatName() {

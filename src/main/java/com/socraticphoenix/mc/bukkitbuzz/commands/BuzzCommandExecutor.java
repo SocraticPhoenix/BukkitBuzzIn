@@ -145,6 +145,28 @@ public class BuzzCommandExecutor extends AbstractPluginService implements Comman
                             sender.sendMessage("Buzzing in stopped for game " + targetGame.name());
                             this.plugin.gameManager().forEachPlayer(targetGame, player -> player.sendMessage(ChatColor.RED + "Buzzing in has stopped for game " + finalTargetGame.name()));
                             return true;
+                        } else if (subCommand.equals("cooldown")) {
+                            if ((args.length >= 2 && !exactGame) || args.length >= 3) {
+                                String secondsStr = exactGame ? args[2] : args[1];
+                                int millis;
+                                try {
+                                    millis = Integer.parseInt(secondsStr);
+                                } catch (NumberFormatException ex) {
+                                    return false;
+                                }
+
+                                if (millis <= 0) {
+                                    targetGame.buzzState().setHasCooldown(false);
+                                    sender.sendMessage("Disabled buzz-in cooldown for game " + targetGame.name());
+                                    return true;
+                                } else {
+                                    targetGame.buzzState().setHasCooldown(true);
+                                    targetGame.buzzState().setCooldownMillis(millis);
+                                    targetGame.teams().forEach(t -> t.setBuzzTimestamp(0));
+                                    sender.sendMessage("Set buzz-in cooldown to " + millis + " millisecond(s) for game " + targetGame.name());
+                                    return true;
+                                }
+                            }
                         } else if (subCommand.equals("countdown")) {
                             if ((args.length >= 2 && !exactGame) || args.length >= 3) {
                                 targetGame.buzzState().buzzIns().clear();
@@ -188,6 +210,7 @@ public class BuzzCommandExecutor extends AbstractPluginService implements Comman
                             }
                         } else if (subCommand.equals("reset")) {
                             targetGame.buzzState().buzzIns().clear();
+                            targetGame.teams().forEach(t -> t.setBuzzTimestamp(0));
                             sender.sendMessage("Reset buzzing for game " + targetGame.name());
                             return true;
                         } else if (subCommand.equals("display")) {

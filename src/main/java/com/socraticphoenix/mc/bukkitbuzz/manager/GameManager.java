@@ -40,6 +40,8 @@ public class GameManager extends AbstractPluginService {
             buzzStateObj.addProperty("hasCountdown", buzzState.hasCountdown());
             buzzStateObj.addProperty("startTimestamp", buzzState.startTimestamp());
             buzzStateObj.addProperty("countdownSeconds", buzzState.countdownSeconds());
+            buzzStateObj.addProperty("hasCooldown", buzzState.hasCooldown());
+            buzzStateObj.addProperty("cooldownMillis", buzzState.cooldownMillis());
             gameObj.add("buzzState", buzzStateObj);
 
             game.teams().forEach(team -> teams.add(team.name()));
@@ -62,7 +64,8 @@ public class GameManager extends AbstractPluginService {
 
                     JsonObject buzzStateObj = gameObj.getAsJsonObject("buzzState");
                     BuzzState buzzState = new BuzzState(buzzStateObj.get("buzzOn").getAsBoolean(), buzzStateObj.get("buzzStarted").getAsBoolean(),
-                            buzzStateObj.get("hasCountdown").getAsBoolean(), buzzStateObj.get("startTimestamp").getAsLong(), buzzStateObj.get("countdownSeconds").getAsInt());
+                            buzzStateObj.get("hasCountdown").getAsBoolean(), buzzStateObj.get("startTimestamp").getAsLong(), buzzStateObj.get("countdownSeconds").getAsInt(),
+                            buzzStateObj.get("hasCooldown").getAsBoolean(), buzzStateObj.get("cooldownMillis").getAsInt());
 
                     JsonElement buzzInsElem = buzzStateObj.get("buzzIns");
                     if (buzzInsElem instanceof JsonArray) {
@@ -127,7 +130,7 @@ public class GameManager extends AbstractPluginService {
 
     public boolean createGame(String name, UUID gameMaster) {
         if (this.games.containsKey(name)) return false;
-        Game game = new Game(name, gameMaster, new BuzzState(false, false, false, 0, 3), new LinkedHashSet<>());
+        Game game = new Game(name, gameMaster, new BuzzState(false, false, false, 0, 3, false, 500), new LinkedHashSet<>());
         this.games.put(name, game);
         this.gameMasters.computeIfAbsent(gameMaster, k -> new LinkedHashSet<>()).add(game);
         return true;
@@ -152,12 +155,17 @@ public class GameManager extends AbstractPluginService {
         private long startTimestamp;
         private int countdownSeconds;
 
-        public BuzzState(boolean buzzOn, boolean buzzStarted, boolean hasCountdown, long startTimestamp, int countdownSeconds) {
+        private boolean hasCooldown;
+        private int cooldownMillis;
+
+        public BuzzState(boolean buzzOn, boolean buzzStarted, boolean hasCountdown, long startTimestamp, int countdownSeconds, boolean hasCooldown, int cooldownMillis) {
             this.buzzOn = buzzOn;
             this.buzzStarted = buzzStarted;
             this.hasCountdown = hasCountdown;
             this.startTimestamp = startTimestamp;
             this.countdownSeconds = countdownSeconds;
+            this.hasCooldown = hasCooldown;
+            this.cooldownMillis = cooldownMillis;
         }
 
         public List<UUID> buzzIns() {
@@ -166,6 +174,24 @@ public class GameManager extends AbstractPluginService {
 
         public void setBuzzIns(List<UUID> buzzIns) {
             this.buzzIns = buzzIns;
+        }
+
+        public boolean hasCooldown() {
+            return this.hasCooldown;
+        }
+
+        public BuzzState setHasCooldown(boolean hasCooldown) {
+            this.hasCooldown = hasCooldown;
+            return this;
+        }
+
+        public int cooldownMillis() {
+            return this.cooldownMillis;
+        }
+
+        public BuzzState setCooldownMillis(int cooldownMillis) {
+            this.cooldownMillis = cooldownMillis;
+            return this;
         }
 
         public boolean buzzOn() {

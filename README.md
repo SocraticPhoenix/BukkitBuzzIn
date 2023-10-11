@@ -57,13 +57,18 @@ The buzz-in modes define when players can buzz in.
 
 The On/Off mode, when turned on, allows a player to buzz-in at any point as long as their team is not buzzed in
 yet. The list of buzzed-in players can be displayed with `/buzz display`, and will be displayed in order. Use `/buzz reset`
-to reset the list of buzzed-in players. You can also start a cooldown at any point with `/buzz cooldown`, which will only
-allow players to buzz-in after a delay. `/buzz cooldown` will also reset the list of currently buzzed in players, so
+to reset the list of buzzed-in players. You can also start a countdown at any point with `/buzz countdown`, which will only
+allow players to buzz-in after a delay. `/buzz countdown` will also reset the list of currently buzzed in players, so
 new players can buzz in after the delay.
 
 The Start/Stop mode, when turned on, allows a player to buzz-in only after buzzing in starts, and only if no one else is buzzed in. 
-Starting buzzing in can either be triggered with the `/buzz start` command, or it can be started after a delay with the `/buzz cooldown` command. 
-Both `/buzz start` and `/buzz cooldown` reset the currently buzzed in player so a new player can buzz in.
+Starting buzzing in can either be triggered with the `/buzz start` command, or it can be started after a delay with the `/buzz countdown` command. 
+Both `/buzz start` and `/buzz countdown` reset the currently buzzed in player so a new player can buzz in.
+
+Finally, both modes support cooldowns, which can be set with the `/buzz cooldown` command. A cooldown will prevent a team from buzzing
+in again after their last buzz-in. Note that this delay applies even if the last buzz-in was not accepted (because someone already buzzed
+in, or because a countdown was not finished). This can help prevent teams simply spamming the buzz-in command/block while
+a countdown is active, or before a game master has used `/buzz start`.
 
 #### Buzzing in
 One option for buzzing in is to use the command.
@@ -76,6 +81,29 @@ One option for buzzing in is to use the command.
 | `/buzz reset`          | bukkitbuzz.admin  | Resets the currently buzzed in player to be no one.                                                               |
 
 
+#### Countdowns & Cooldowns
+
+| Command                                      | Permission       | Purpose                                                                                                                                                                          |
+|----------------------------------------------|------------------|----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| `/buzz countdown [game] <seconds> [display]` | bukkitbuzz.admin | Starts a countdown until buzz-ins are open, for the current game or the game specified. If display is false, the countdown messages will not be displayed to the players.        |
+| `/buzz cooldown [game] <milliseconds>`       | bukkitbuzz.admin | Sets the buzz-in cooldown for the current game, or the game specified. Teams can only buzz-in once every X milliseconds. Note this applies even if the buzz-in was not accepted. |
+
+#### Buzz-in On/Off Mode
+On/Off mode allows buzzing in at any time, even if someone else has already buzzed in. On/Off mode being enabled overrides Start/Stop mode.
+
+| Command                                      | Permission       | Purpose                                                                                                                                                                                         |
+|----------------------------------------------|------------------|-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| `/buzz on [game]`                            | bukkitbuzz.admin | Enables on/off mode for the current game, or the game specified.                                                                                                                                |
+| `/buzz off [game]`                           | bukkitbuzz.admin | Disables on/off mode for the current game, or the game specified.                                                                                                                               |
+
+#### Buzz-in Start/Stop Mode
+Start/Stop mode only allows buzzing in after buzzing in has started, and only if no one else is currently buzzed in.
+
+| Command                                      | Permission       | Purpose                                                                                                                                                                                         |
+|----------------------------------------------|------------------|-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| `/buzz start [game]`                         | bukkitbuzz.admin | Starts accepting buzz-ins for the current game, or the game specified.                                                                                                                          |
+| `/buzz stop [game]`                          | bukkitbuzz.admin | Stops accepting buzz-ins for the current game, or the game specified.                                                                                                                           |
+
 #### Buzz-in Blocks
 Another system for buzzing in is clicking on special buzz-in blocks.
 
@@ -85,21 +113,3 @@ Another system for buzzing in is clicking on special buzz-in blocks.
 | `/buzz block remove` | bukkitbuzz.admin  | Removes the block you are looking at from the buzz-in blocks. |
 | `/buzz block test`   | bukkitbuzz.admin  | Tests if the block you are looking at is a buzz-in block.     |
 | `/buzz block list`   | bukkitbuzz.player | Lists all buzz-in blocks.                                     |
-
-#### Buzz-in On/Off Mode
-On/Off mode allows buzzing in at any time, even if someone else has already buzzed in. On/Off mode being enabled overrides Start/Stop mode.
-
-| Command                                      | Permission       | Purpose                                                                                                                                                                                         |
-|----------------------------------------------|------------------|-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| `/buzz on [game]`                            | bukkitbuzz.admin | Enables on/off mode for the current game, or the game specified.                                                                                                                                |
-| `/buzz off [game]`                           | bukkitbuzz.admin | Disables on/off mode for the current game, or the game specified.                                                                                                                               |
-| `/buzz countdown [game] <seconds> [display]` | bukkitbuz.admin  | Starts a countdown for the given number of seconds until buzz-ins will be accepted for the current game, or the game specified. If display is false, the countdown will not display to players. |
-
-#### Buzz-in Start/Stop Mode
-Start/Stop mode only allows buzzing in after buzzing in has started, and only if no one else is currently buzzed in.
-
-| Command                                      | Permission       | Purpose                                                                                                                                                                                         |
-|----------------------------------------------|------------------|-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| `/buzz start [game]`                         | bukkitbuzz.admin | Starts accepting buzz-ins for the current game, or the game specified.                                                                                                                          |
-| `/buzz stop [game]`                          | bukkitbuzz.admin | Stops accepting buzz-ins for the current game, or the game specified.                                                                                                                           |
-| `/buzz countdown [game] <seconds> [display]` | bukkitbuz.admin  | Starts a countdown for the given number of seconds until buzz-ins will be accepted for the current game, or the game specified. If display is false, the countdown will not display to players. |

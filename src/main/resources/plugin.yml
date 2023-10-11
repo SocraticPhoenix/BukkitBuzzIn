@@ -14,7 +14,7 @@ commands:
     permission-message: You don't have permission to use this command.
   buzz:
     description: Buzz command.
-    usage: /buzz <<start | stop | on | off | buzzed> [game-name] | block <create | remove | test | list> | in | countdown [game-name] <seconds> [display]>
+    usage: /buzz <<start | stop | on | off | buzzed> [game-name] | block <create | remove | test | list> | in | countdown [game-name] <seconds> [display] | cooldown [game-name] <milliseconds>>
     permission: bukkitbuzz.player
     permission-message: You don't have permission to use this command.
 

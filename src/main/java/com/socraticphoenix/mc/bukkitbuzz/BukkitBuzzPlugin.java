@@ -141,9 +141,22 @@ public class BukkitBuzzPlugin extends JavaPlugin {
     public synchronized void registerBuzz(Player player) {
         long timestamp = System.currentTimeMillis();
 
-        GameManager.Game game = this.gameManager.getPlayerGame(player.getUniqueId());
-        if (game != null) {
+        UUID uuid = player.getUniqueId();
+        GameManager.Game game = this.gameManager().getPlayerGame(uuid);
+        TeamManager.Team team = this.teamManager().getPlayerTeam(uuid);
+        if (game != null && team != null) {
             GameManager.BuzzState state = game.buzzState();
+
+            if(state.hasCooldown()) {
+                long dif = timestamp - team.buzzTimestamp();
+                if (dif < state.cooldownMillis()) {
+                    player.sendMessage("Your team's buzz-in is cooling down! " + TimeUnit.MILLISECONDS.toSeconds(dif) + " second(s) left!");
+                    return;
+                } else {
+                    team.setBuzzTimestamp(timestamp);
+                }
+            }
+
             if (state.hasCountdown()) {
                 long dif = timestamp - state.startTimestamp();
                 if (dif < TimeUnit.SECONDS.toMillis(state.countdownSeconds())) {
@@ -154,7 +167,7 @@ public class BukkitBuzzPlugin extends JavaPlugin {
 
             if (state.buzzOn()) {
                 if (!state.buzzIns().contains(player.getUniqueId())) {
-                    if (this.teamManager.getPlayerTeam(player.getUniqueId()).players().stream().noneMatch(teamMate -> state.buzzIns().contains(teamMate))) {
+                    if (team.players().stream().noneMatch(teamMate -> state.buzzIns().contains(teamMate))) {
                         buzz(player, game, state);
                     } else {
                         player.sendMessage("Your team has already buzzed in!");
@@ -170,7 +183,7 @@ public class BukkitBuzzPlugin extends JavaPlugin {
                 player.sendMessage("Buzzing in is not open!");
             }
         } else {
-            player.sendMessage("You are not in a game.");
+            player.sendMessage(game == null ? "You are not in a game." : "You are not on a team.");
         }
     }
 
