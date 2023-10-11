@@ -24,7 +24,7 @@ Teams are collections of players with a team name. Players can only be in one te
 #### Adding Players to Teams
 | Command                     | Permission             | Purpose                                                                                                            |
 |-----------------------------|------------------------|--------------------------------------------------------------------------------------------------------------------|
-| `/team set <Player> <name>` | bukkitbuzz.admin       | Manually sets a specific player's team. Can also pass "none" as the team name to remove the player from all teams. |
+| `/team set <player> <name>` | bukkitbuzz.admin       | Manually sets a specific player's team. Can also pass "none" as the team name to remove the player from all teams. |
 | `/team join <name>`         | bukkitbuzz.player.team | Allows a player to join the specified team. Can also pass "none" as the team name to be removed from all teams.    |
 
 
