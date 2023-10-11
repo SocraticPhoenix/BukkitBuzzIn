@@ -7,7 +7,14 @@ import com.socraticphoenix.mc.bukkitbuzz.AbstractPluginService;
 import com.socraticphoenix.mc.bukkitbuzz.BukkitBuzzPlugin;
 import org.bukkit.entity.Player;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.UUID;
 import java.util.function.Consumer;
 
 public class GameManager extends AbstractPluginService {
@@ -115,6 +122,17 @@ public class GameManager extends AbstractPluginService {
             Player player = this.plugin.getServer().getPlayer(uuid);
             if (player != null) {
                 consumer.accept(player);
+            }
+        }));
+    }
+
+    public void forEachPlayerExcept(Game game, UUID id, Consumer<Player> consumer) {
+        game.teams().forEach(team -> team.players().forEach(uuid -> {
+            if (!id.equals(uuid)) {
+                Player player = this.plugin.getServer().getPlayer(uuid);
+                if (player != null) {
+                    consumer.accept(player);
+                }
             }
         }));
     }

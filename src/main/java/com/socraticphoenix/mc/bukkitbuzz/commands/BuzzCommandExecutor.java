@@ -4,7 +4,6 @@ import com.socraticphoenix.mc.bukkitbuzz.AbstractPluginService;
 import com.socraticphoenix.mc.bukkitbuzz.BukkitBuzzPlugin;
 import com.socraticphoenix.mc.bukkitbuzz.manager.GameManager;
 import org.bukkit.ChatColor;
-import org.bukkit.Color;
 import org.bukkit.block.Block;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
@@ -126,24 +125,28 @@ public class BuzzCommandExecutor extends AbstractPluginService implements Comman
                             targetGame.buzzState().buzzIns().clear();
                             targetGame.buzzState().setBuzzOn(true);
                             sender.sendMessage("Enabled buzzing in at anytime for game " + targetGame.name());
-                            this.plugin.gameManager().forEachPlayer(targetGame, player -> player.sendMessage(ChatColor.GREEN + "Buzzing in at any time is enabled for game " + finalTargetGame.name()));
+                            this.plugin.gameManager().forEachPlayerExcept(targetGame, this.plugin.getUuid(sender),
+                                    player -> player.sendMessage(ChatColor.GREEN + "Buzzing in at any time is enabled for game " + finalTargetGame.name()));
                             return true;
                         } else if (subCommand.equals("off")) {
                             targetGame.buzzState().setBuzzOn(false);
                             sender.sendMessage("Disabled buzzing in at anytime for game " + targetGame.name());
-                            this.plugin.gameManager().forEachPlayer(targetGame, player -> player.sendMessage(ChatColor.RED + "Buzzing in at any time is disabled for game " + finalTargetGame.name()));
+                            this.plugin.gameManager().forEachPlayerExcept(targetGame, this.plugin.getUuid(sender),
+                                    player -> player.sendMessage(ChatColor.RED + "Buzzing in at any time is disabled for game " + finalTargetGame.name()));
                             return true;
                         } else if (subCommand.equals("start")) {
                             targetGame.buzzState().buzzIns().clear();
                             targetGame.buzzState().setBuzzStarted(true);
                             targetGame.buzzState().setHasCountdown(false);
                             sender.sendMessage("Buzzing in started for game " + targetGame.name());
-                            this.plugin.gameManager().forEachPlayer(targetGame, player -> player.sendMessage(ChatColor.GREEN + "Buzzing has started for game " + finalTargetGame.name()));
+                            this.plugin.gameManager().forEachPlayerExcept(targetGame, this.plugin.getUuid(sender),
+                                    player -> player.sendMessage(ChatColor.GREEN + "Buzzing has started for game " + finalTargetGame.name()));
                             return true;
                         } else if (subCommand.equals("stop")) {
                             targetGame.buzzState().setBuzzStarted(false);
                             sender.sendMessage("Buzzing in stopped for game " + targetGame.name());
-                            this.plugin.gameManager().forEachPlayer(targetGame, player -> player.sendMessage(ChatColor.RED + "Buzzing in has stopped for game " + finalTargetGame.name()));
+                            this.plugin.gameManager().forEachPlayerExcept(targetGame, this.plugin.getUuid(sender),
+                                    player -> player.sendMessage(ChatColor.RED + "Buzzing in has stopped for game " + finalTargetGame.name()));
                             return true;
                         } else if (subCommand.equals("cooldown")) {
                             if ((args.length >= 2 && !exactGame) || args.length >= 3) {
@@ -204,7 +207,8 @@ public class BuzzCommandExecutor extends AbstractPluginService implements Comman
                                 if (display) {
                                     delayBuzzMessage(targetGame, seconds);
                                 } else {
-                                    this.plugin.gameManager().forEachPlayer(targetGame, p -> p.sendMessage(ChatColor.GREEN + "Buzzing in opens in " + seconds + " second(s)"));
+                                    this.plugin.gameManager().forEachPlayerExcept(targetGame, this.plugin.getUuid(sender),
+                                            p -> p.sendMessage(ChatColor.GREEN + "Buzzing in opens in " + seconds + " second(s)"));
                                 }
                                 return true;
                             }
@@ -216,7 +220,8 @@ public class BuzzCommandExecutor extends AbstractPluginService implements Comman
                         } else if (subCommand.equals("display")) {
                             if (!targetGame.buzzState().buzzIns().isEmpty()) {
                                 String message = this.plugin.buildLastBuzzedMessage(targetGame.buzzState()) + " buzzed in already.";
-                                this.plugin.gameManager().forEachPlayer(targetGame, p -> p.sendMessage(message));
+                                sender.sendMessage(message);
+                                this.plugin.gameManager().forEachPlayerExcept(targetGame, this.plugin.getUuid(sender), p -> p.sendMessage(message));
                             } else {
                                 sender.sendMessage("No last buzzed in team recorded for " + targetGame.name());
                             }

@@ -11,6 +11,7 @@ import com.socraticphoenix.mc.bukkitbuzz.manager.BuzzBlockManager;
 import com.socraticphoenix.mc.bukkitbuzz.manager.GameManager;
 import com.socraticphoenix.mc.bukkitbuzz.manager.TeamManager;
 import org.bukkit.ChatColor;
+import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 import org.bukkit.plugin.java.JavaPlugin;
 
@@ -20,7 +21,6 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.util.UUID;
 import java.util.concurrent.TimeUnit;
-import java.util.stream.Collectors;
 
 public class BukkitBuzzPlugin extends JavaPlugin {
     public static final UUID CONSOLE_UUID = new UUID(0, 0);
@@ -100,6 +100,14 @@ public class BukkitBuzzPlugin extends JavaPlugin {
 
     public BuzzBlockManager buzzBlockManager() {
         return this.buzzBlockManager;
+    }
+
+    public UUID getUuid(CommandSender sender) {
+        if (sender instanceof Player) {
+            return ((Player) sender).getUniqueId();
+        } else {
+            return CONSOLE_UUID;
+        }
     }
 
     public String buildLastBuzzedMessage(GameManager.BuzzState state) {
@@ -192,11 +200,7 @@ public class BukkitBuzzPlugin extends JavaPlugin {
         state.buzzIns().add(player.getUniqueId());
 
         String message = player.getName() + " on team " + this.teamManager().getPlayerTeam(player.getUniqueId()).chatName() + ChatColor.WHITE + " buzzed in!";
-        this.gameManager().forEachPlayer(game, p -> {
-            if (!p.getUniqueId().equals(game.gameMaster())) {
-                p.sendMessage(message);
-            }
-        });
+        this.gameManager().forEachPlayerExcept(game, game.gameMaster(), p -> p.sendMessage(message));
 
         Player gameMaster = this.getServer().getPlayer(game.gameMaster());
         if (gameMaster != null) {
