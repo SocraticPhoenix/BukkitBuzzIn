@@ -121,7 +121,13 @@ public class BuzzCommandExecutor extends AbstractPluginService implements Comman
 
                     GameManager.Game finalTargetGame = targetGame;
                     if (sender.hasPermission("bukkitbuzz.admin")) {
-                        if (subCommand.equals("on")) {
+                        if (subCommand.equals("save")) {
+                            sender.sendMessage("Saving BukkitBuzz files...");
+                            this.plugin.getServer().getScheduler().runTaskAsynchronously(this.plugin, () -> {
+                                this.plugin.save();
+                                this.plugin.getServer().getScheduler().runTask(this.plugin, () -> sender.sendMessage("BukkitBuzz files saved."));
+                            });
+                        } else if (subCommand.equals("on")) {
                             targetGame.buzzState().buzzIns().clear();
                             targetGame.buzzState().setBuzzOn(true);
                             sender.sendMessage("Enabled buzzing in at anytime for game " + targetGame.name());

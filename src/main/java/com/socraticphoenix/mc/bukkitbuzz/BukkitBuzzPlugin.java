@@ -2,7 +2,6 @@ package com.socraticphoenix.mc.bukkitbuzz;
 
 import com.google.gson.Gson;
 import com.google.gson.JsonObject;
-import com.google.gson.JsonParseException;
 import com.socraticphoenix.mc.bukkitbuzz.commands.BuzzCommandExecutor;
 import com.socraticphoenix.mc.bukkitbuzz.commands.GameCommandExecutor;
 import com.socraticphoenix.mc.bukkitbuzz.commands.TeamCommandExecutor;
@@ -17,10 +16,10 @@ import org.bukkit.plugin.java.JavaPlugin;
 
 import java.io.File;
 import java.io.FileReader;
-import java.io.IOException;
 import java.nio.file.Files;
 import java.util.UUID;
 import java.util.concurrent.TimeUnit;
+import java.util.logging.Level;
 
 public class BukkitBuzzPlugin extends JavaPlugin {
     public static final UUID CONSOLE_UUID = new UUID(0, 0);
@@ -30,6 +29,8 @@ public class BukkitBuzzPlugin extends JavaPlugin {
     private GameManager gameManager;
     private BuzzBlockManager buzzBlockManager;
 
+    private final Object fileLock = new Object();
+
     @Override
     public void onEnable() {
         this.getDataFolder().mkdirs();
@@ -38,55 +39,83 @@ public class BukkitBuzzPlugin extends JavaPlugin {
         this.gameManager = new GameManager(this);
         this.buzzBlockManager = new BuzzBlockManager();
 
-        try {
-            File teamConf = new File(this.getDataFolder(), "teams.json");
-            if (teamConf.exists()) {
-                JsonObject object = gson.fromJson(new FileReader(teamConf), JsonObject.class);
-                this.teamManager.load(object);
-            } else {
-                Files.writeString(teamConf.toPath(), gson.toJson(this.teamManager.save()));
-            }
-
-            File gamesConf = new File(this.getDataFolder(), "games.json");
-            if (gamesConf.exists()) {
-                JsonObject object = gson.fromJson(new FileReader(gamesConf), JsonObject.class);
-                this.gameManager.load(object);
-            } else {
-                Files.writeString(gamesConf.toPath(), gson.toJson(this.gameManager.save()));
-            }
-
-            File buzzBlocksConf = new File(this.getDataFolder(), "buzz_blocks.json");
-            if (buzzBlocksConf.exists()) {
-                JsonObject object = gson.fromJson(new FileReader(buzzBlocksConf), JsonObject.class);
-                this.buzzBlockManager.load(object);
-            } else {
-                Files.writeString(buzzBlocksConf.toPath(), gson.toJson(this.buzzBlockManager.save()));
-            }
-        } catch (IOException | JsonParseException ex) {
-            this.getLogger().severe("FAILED TO LOAD CONFIG/DATA FILES");
-            ex.printStackTrace();
-        }
+        this.load();
 
         this.getCommand("team").setExecutor(new TeamCommandExecutor(this));
         this.getCommand("game").setExecutor(new GameCommandExecutor(this));
         this.getCommand("buzz").setExecutor(new BuzzCommandExecutor(this));
         this.getServer().getPluginManager().registerEvents(new BuzzBlockListener(this), this);
+
+        Runtime.getRuntime().addShutdownHook(new Thread(this::save));
     }
 
     @Override
     public void onDisable() {
-        try {
-            File teamConf = new File(this.getDataFolder(), "teams.json");
-            Files.writeString(teamConf.toPath(), gson.toJson(this.teamManager.save()));
+        this.save();
+    }
 
-            File gamesConf = new File(this.getDataFolder(), "games.json");
-            Files.writeString(gamesConf.toPath(), gson.toJson(this.gameManager.save()));
+    public void load() {
+        synchronized (this.fileLock) {
+            try {
+                File teamConf = new File(this.getDataFolder(), "teams.json");
+                if (teamConf.exists()) {
+                    JsonObject object = gson.fromJson(new FileReader(teamConf), JsonObject.class);
+                    this.teamManager.load(object);
+                } else {
+                    Files.writeString(teamConf.toPath(), gson.toJson(this.teamManager.save()));
+                }
+            } catch (Exception ex) {
+                this.getLogger().log(Level.SEVERE, "FAILED TO load teams.json", ex);
+            }
 
-            File buzzBlocksConf = new File(this.getDataFolder(), "buzz_blocks.json");
-            Files.writeString(buzzBlocksConf.toPath(), gson.toJson(this.buzzBlockManager.save()));
-        } catch (IOException | JsonParseException ex) {
-            this.getLogger().severe("FAILED TO SAVE CONFIG/DATA FILES");
-            ex.printStackTrace();
+            try {
+                File gamesConf = new File(this.getDataFolder(), "games.json");
+                if (gamesConf.exists()) {
+                    JsonObject object = gson.fromJson(new FileReader(gamesConf), JsonObject.class);
+                    this.gameManager.load(object);
+                } else {
+                    Files.writeString(gamesConf.toPath(), gson.toJson(this.gameManager.save()));
+                }
+            } catch (Exception ex) {
+                this.getLogger().log(Level.SEVERE, "FAILED TO load games.json", ex);
+            }
+
+            try {
+                File buzzBlocksConf = new File(this.getDataFolder(), "buzz_blocks.json");
+                if (buzzBlocksConf.exists()) {
+                    JsonObject object = gson.fromJson(new FileReader(buzzBlocksConf), JsonObject.class);
+                    this.buzzBlockManager.load(object);
+                } else {
+                    Files.writeString(buzzBlocksConf.toPath(), gson.toJson(this.buzzBlockManager.save()));
+                }
+            } catch (Exception ex) {
+                this.getLogger().log(Level.SEVERE, "FAILED TO load buzz_blocks.json", ex);
+            }
+        }
+    }
+
+    public void save() {
+        synchronized (this.fileLock) {
+            try {
+                File teamConf = new File(this.getDataFolder(), "teams.json");
+                Files.writeString(teamConf.toPath(), gson.toJson(this.teamManager.save()));
+            } catch (Exception ex) {
+                this.getLogger().log(Level.SEVERE, "FAILED TO SAVE teams.json", ex);
+            }
+
+            try {
+                File gamesConf = new File(this.getDataFolder(), "games.json");
+                Files.writeString(gamesConf.toPath(), gson.toJson(this.gameManager.save()));
+            } catch (Exception ex) {
+                this.getLogger().log(Level.SEVERE, "FAILED TO SAVE games.json", ex);
+            }
+
+            try {
+                File buzzBlocksConf = new File(this.getDataFolder(), "buzz_blocks.json");
+                Files.writeString(buzzBlocksConf.toPath(), gson.toJson(this.buzzBlockManager.save()));
+            } catch (Exception ex) {
+                this.getLogger().log(Level.SEVERE, "FAILED TO SAVE buzz_blocks.json", ex);
+            }
         }
     }
 
